@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: photo-album-postgres
+    environment:
+      POSTGRES_DB: photoalbum
+      POSTGRES_USER: photoalbum
+      POSTGRES_PASSWORD: photoalbum
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,0 +1,45 @@
+# Maven
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+!backend/.mvn/wrapper/maven-wrapper.properties
+
+# IDE - NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+backend/nbproject/private/
+
+# IDE - IntelliJ IDEA (ha később)
+.idea/
+*.iml
+
+# IDE - VS Code (frontendhez)
+.vscode/
+
+# Node / React (később)
+node_modules/
+frontend/build/
+frontend/dist/
+
+# Feltöltött fájlok - SOHA nem kerülnek a repóba
+backend/uploads/
+
+# Logok
+*.log
+logs/
+
+# OS-specifikus
+.DS_Store
+Thumbs.db
+
+# Környezeti változók
+.env
+.env.local
+*.env
+
+# IDE- és rendszerspecifikus
+*.swp
+*~

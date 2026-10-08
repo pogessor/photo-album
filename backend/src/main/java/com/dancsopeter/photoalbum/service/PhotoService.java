@@ -1,6 +1,7 @@
 package com.dancsopeter.photoalbum.service;
 
 import com.dancsopeter.photoalbum.entity.Photo;
+import com.dancsopeter.photoalbum.exception.PhotoNotFoundException;
 import com.dancsopeter.photoalbum.repository.PhotoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -73,22 +74,22 @@ public class PhotoService {
 
     public Resource loadImage(Long id) {
         Photo photo = photoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Fotó nem található: id=" + id));
+                .orElseThrow(() -> new PhotoNotFoundException(id));
         return storageService.load(photo.getFilename());
     }
 
     @Transactional
     public void deletePhoto(Long id) {
         Photo photo = photoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Fotó nem található: id=" + id));
+                .orElseThrow(() -> new PhotoNotFoundException(id));
         storageService.delete(photo.getFilename());
         photoRepository.delete(photo);
-    }  
+    } 
     
     @Transactional
     public Photo updatePhoto(Long id, Integer year, String description) {
         Photo photo = photoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Fotó nem található: id=" + id));
+                .orElseThrow(() -> new PhotoNotFoundException(id));
 
         if (year != null) {
             photo.setYear(year);
@@ -98,5 +99,5 @@ public class PhotoService {
         }
 
         return photoRepository.save(photo);
-    }    
+    } 
 }

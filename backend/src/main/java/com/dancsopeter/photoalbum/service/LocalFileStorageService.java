@@ -1,5 +1,6 @@
 package com.dancsopeter.photoalbum.service;
 
+import com.dancsopeter.photoalbum.exception.StorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -32,7 +33,7 @@ public class LocalFileStorageService implements PhotoStorageService {
     @Override
     public String save(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("Üres fájl nem tölthető fel.");
+            throw new StorageException("Üres fájl nem tölthető fel.");
         }
 
         String originalFilename = file.getOriginalFilename();
@@ -46,42 +47,43 @@ public class LocalFileStorageService implements PhotoStorageService {
         try {
             Path targetPath = rootLocation.resolve(storedFilename).normalize();
             if (!targetPath.startsWith(rootLocation)) {
-                throw new IllegalArgumentException("Érvénytelen fájlnév: " + storedFilename);
+                throw new StorageException("Érvénytelen fájlnév: " + storedFilename);
             }
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
             return storedFilename;
         } catch (IOException e) {
-            throw new RuntimeException("Nem sikerült elmenteni a fájlt: " + storedFilename, e);
+            throw new StorageException("Nem sikerült elmenteni a fájlt: " + storedFilename, e);
         }
     }
 
-    @Override
+   @Override
     public Resource load(String storedFilename) {
         try {
             Path filePath = rootLocation.resolve(storedFilename).normalize();
             if (!filePath.startsWith(rootLocation)) {
-                throw new IllegalArgumentException("Érvénytelen fájlnév: " + storedFilename);
+                throw new StorageException("Érvénytelen fájlnév: " + storedFilename);
             }
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() && resource.isReadable()) {
                 return resource;
             }
-            throw new RuntimeException("Fájl nem található: " + storedFilename);
+            throw new StorageException("Fájl nem található: " + storedFilename);
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Hibás fájl útvonal: " + storedFilename, e);
+            throw new StorageException("Hibás fájl útvonal: " + storedFilename, e);
         }
     }
-
+    
+    
     @Override
     public void delete(String storedFilename) {
         try {
             Path filePath = rootLocation.resolve(storedFilename).normalize();
             if (!filePath.startsWith(rootLocation)) {
-                throw new IllegalArgumentException("Érvénytelen fájlnév: " + storedFilename);
+                throw new StorageException("Érvénytelen fájlnév: " + storedFilename);
             }
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
-            throw new RuntimeException("Nem sikerült törölni a fájlt: " + storedFilename, e);
+            throw new StorageException("Nem sikerült törölni a fájlt: " + storedFilename, e);
         }
     }
 

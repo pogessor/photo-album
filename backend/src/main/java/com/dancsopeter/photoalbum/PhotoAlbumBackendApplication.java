@@ -1,14 +1,17 @@
 package com.dancsopeter.photoalbum;
 
 import com.dancsopeter.photoalbum.entity.Photo;
-import com.dancsopeter.photoalbum.repository.PhotoRepository;
+import com.dancsopeter.photoalbum.service.GeminiService;
 import com.dancsopeter.photoalbum.service.PhotoService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.time.LocalDateTime;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @SpringBootApplication
 public class PhotoAlbumBackendApplication {
@@ -18,7 +21,10 @@ public class PhotoAlbumBackendApplication {
     }
 
     @Bean
-    CommandLineRunner demo(PhotoService photoService) {
+    CommandLineRunner demo(
+            PhotoService photoService,
+            GeminiService geminiService,
+            @Value("${app.gemini.test-on-startup:false}") boolean geminiTestEnabled) {
         return args -> {
             photoService.deleteAll();
             System.out.println(">>> Korábbi fotók törölve.");
@@ -63,6 +69,25 @@ public class PhotoAlbumBackendApplication {
                     + " | year=" + p.getYear()
                     + " | desc=" + p.getDescription()
             ));
+
+            if (geminiTestEnabled) {
+                System.out.println("\n>>> Gemini API teszt indul...");
+                Path testImagePath = Paths.get("uploads", "test.jpeg");
+                if (!Files.exists(testImagePath)) {
+                    System.out.println(">>> A teszt fájl nem található: "
+                            + testImagePath.toAbsolutePath());
+                } else {
+                    try {
+                        byte[] imageBytes = Files.readAllBytes(testImagePath);
+                        String description = geminiService.describeImage(imageBytes, "image/jpeg");
+                        System.out.println(">>> Gemini leírás: " + description);
+                    } catch (Exception e) {
+                        System.out.println(">>> Gemini hiba: " + e.getMessage());
+                    }
+                }
+            } else {
+                System.out.println("\n>>> Gemini teszt kihagyva (app.gemini.test-on-startup=false).");
+            }
         };
     }
 }

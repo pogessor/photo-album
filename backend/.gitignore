@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Feltöltött fájlok - ne kerüljenek a repóba, kivéve a teszt fájlt
+backend/uploads/*
+!backend/uploads/test.jpeg

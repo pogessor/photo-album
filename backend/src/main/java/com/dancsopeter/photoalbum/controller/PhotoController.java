@@ -1,8 +1,13 @@
 package com.dancsopeter.photoalbum.controller;
 
 import com.dancsopeter.photoalbum.dto.PhotoUpdateRequest;
+import com.dancsopeter.photoalbum.dto.PhotoUploadRequest;
 import com.dancsopeter.photoalbum.entity.Photo;
 import com.dancsopeter.photoalbum.service.PhotoService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,9 +16,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
+//@Validated
 @RequestMapping("/api/photos")
 public class PhotoController {
 
@@ -40,15 +45,29 @@ public class PhotoController {
         return photoService.search(keyword);
     }
     
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /*@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Photo> upload(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("year") Integer year,
-            @RequestParam(value = "description", required = false) String description) {
+            @RequestParam("year")
+            @Min(value = 1000, message = "Az évszámnak négyjegyűnek kell lennie (1000-9999).")
+            @Max(value = 9999, message = "Az évszámnak négyjegyűnek kell lennie (1000-9999).")
+            Integer year,
+            @RequestParam(value = "description", required = false)
+            @Size(max = 1000, message = "A leírás legfeljebb 1000 karakter lehet.")
+            String description) {
 
         Photo photo = photoService.uploadPhoto(file, year, description);
         return ResponseEntity.status(HttpStatus.CREATED).body(photo);
-    }
+    }*/
+            
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Photo> upload(@Valid @ModelAttribute PhotoUploadRequest request) {
+        Photo photo = photoService.uploadPhoto(
+                request.file(),
+                request.year(),
+                request.description());
+        return ResponseEntity.status(HttpStatus.CREATED).body(photo);
+    }            
 
     @GetMapping("/{id}/image")
     public ResponseEntity<Resource> getImage(@PathVariable Long id) {
@@ -69,7 +88,7 @@ public class PhotoController {
     @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Photo> update(
             @PathVariable Long id,
-            @RequestBody PhotoUpdateRequest request) {
+             @Valid @RequestBody PhotoUpdateRequest request) {
 
         Photo updated = photoService.updatePhoto(id, request.year(), request.description());
         return ResponseEntity.ok(updated);

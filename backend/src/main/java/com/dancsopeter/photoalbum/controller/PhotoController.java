@@ -1,5 +1,6 @@
 package com.dancsopeter.photoalbum.controller;
 
+import com.dancsopeter.photoalbum.dto.PhotoUpdateRequest;
 import com.dancsopeter.photoalbum.entity.Photo;
 import com.dancsopeter.photoalbum.service.PhotoService;
 import org.springframework.http.ResponseEntity;
@@ -63,5 +64,14 @@ public class PhotoController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         photoService.deletePhoto(id);
         return ResponseEntity.noContent().build();
+    }   
+    
+    @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Photo> update(
+            @PathVariable Long id,
+            @RequestBody PhotoUpdateRequest request) {
+
+        Photo updated = photoService.updatePhoto(id, request.year(), request.description());
+        return ResponseEntity.ok(updated);
     }    
 }

@@ -83,5 +83,20 @@ public class PhotoService {
                 .orElseThrow(() -> new RuntimeException("Fotó nem található: id=" + id));
         storageService.delete(photo.getFilename());
         photoRepository.delete(photo);
+    }  
+    
+    @Transactional
+    public Photo updatePhoto(Long id, Integer year, String description) {
+        Photo photo = photoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Fotó nem található: id=" + id));
+
+        if (year != null) {
+            photo.setYear(year);
+        }
+        if (description != null) {
+            photo.setDescription(description);
+        }
+
+        return photoRepository.save(photo);
     }    
 }

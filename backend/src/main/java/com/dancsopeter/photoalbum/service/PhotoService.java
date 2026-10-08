@@ -2,19 +2,25 @@ package com.dancsopeter.photoalbum.service;
 
 import com.dancsopeter.photoalbum.entity.Photo;
 import com.dancsopeter.photoalbum.repository.PhotoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PhotoService {
 
     private final PhotoRepository photoRepository;
+    private final PhotoStorageService storageService;
 
-    public PhotoService(PhotoRepository photoRepository) {
+    public PhotoService(PhotoRepository photoRepository,
+                        PhotoStorageService storageService) {
         this.photoRepository = photoRepository;
+        this.storageService = storageService;
     }
 
     public List<Photo> findAll() {
@@ -47,4 +53,35 @@ public class PhotoService {
     public void deleteAll() {
         photoRepository.deleteAll();
     }
+    
+    @Transactional
+    public Photo uploadPhoto(MultipartFile file, Integer year, String description) {
+        String storedFilename = storageService.save(file);
+        try {
+            Photo photo = new Photo();
+            photo.setFilename(storedFilename);
+            photo.setOriginalFilename(file.getOriginalFilename());
+            photo.setYear(year);
+            photo.setDescription(description);
+            photo.setUploadedAt(LocalDateTime.now());
+            return photoRepository.save(photo);
+        } catch (Exception e) {
+            storageService.delete(storedFilename);
+            throw e;
+        }
+    }
+
+    public Resource loadImage(Long id) {
+        Photo photo = photoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Fotó nem található: id=" + id));
+        return storageService.load(photo.getFilename());
+    }
+
+    @Transactional
+    public void deletePhoto(Long id) {
+        Photo photo = photoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Fotó nem található: id=" + id));
+        storageService.delete(photo.getFilename());
+        photoRepository.delete(photo);
+    }    
 }

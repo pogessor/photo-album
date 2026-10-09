@@ -45,5 +45,5 @@ public class GeminiService {
 
     GenerateContentResponse response = client.models.generateContent(model, content, config);
     return response.text();
-}
+    }
 }

@@ -1,0 +1,29 @@
+# --- 1. szakasz: Build ---
+FROM maven:3.9-eclipse-temurin-21 AS build
+
+WORKDIR /app
+
+# Először csak a pom.xml, hogy a függőségek cache-elhetők legyenek
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Aztán a forráskód
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# --- 2. szakasz: Runtime ---
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+# A build szakaszban elkészült JAR átmásolása
+COPY --from=build /app/target/*.jar app.jar
+
+# A feltöltött fájlok mappája (volume-ként csatoljuk)
+RUN mkdir -p /app/uploads
+
+# A Spring Boot portja
+EXPOSE 8080
+
+# Indítás
+ENTRYPOINT ["java", "-jar", "app.jar"]

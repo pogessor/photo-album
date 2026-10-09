@@ -1,5 +1,6 @@
 package com.dancsopeter.photoalbum.controller;
 
+import com.dancsopeter.photoalbum.dto.PhotoDescriptionResponse;
 import com.dancsopeter.photoalbum.dto.PhotoUpdateRequest;
 import com.dancsopeter.photoalbum.dto.PhotoUploadRequest;
 import com.dancsopeter.photoalbum.entity.Photo;
@@ -16,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 //@Validated
@@ -92,5 +94,13 @@ public class PhotoController {
 
         Photo updated = photoService.updatePhoto(id, request.year(), request.description());
         return ResponseEntity.ok(updated);
+    }  
+    
+    @PostMapping(value = "/describe", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PhotoDescriptionResponse> describe(
+            @RequestParam("file") MultipartFile file) {
+
+        String description = photoService.describeImage(file);
+        return ResponseEntity.ok(new PhotoDescriptionResponse(description));
     }    
 }

@@ -2,8 +2,10 @@ package com.dancsopeter.photoalbum.service;
 
 import com.dancsopeter.photoalbum.entity.Photo;
 import com.dancsopeter.photoalbum.exception.PhotoNotFoundException;
+import com.dancsopeter.photoalbum.exception.StorageException;
 import com.dancsopeter.photoalbum.repository.PhotoRepository;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,11 +19,14 @@ public class PhotoService {
 
     private final PhotoRepository photoRepository;
     private final PhotoStorageService storageService;
+    private final GeminiService geminiService;
 
     public PhotoService(PhotoRepository photoRepository,
-                        PhotoStorageService storageService) {
+                        PhotoStorageService storageService,
+                        GeminiService geminiService) {
         this.photoRepository = photoRepository;
         this.storageService = storageService;
+        this.geminiService = geminiService;
     }
 
     public List<Photo> findAll() {
@@ -100,4 +105,19 @@ public class PhotoService {
 
         return photoRepository.save(photo);
     } 
+    
+    public String describeImage(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new StorageException("Üres fájl nem írható le.");
+        }
+        String mimeType = file.getContentType();
+        if (mimeType == null || mimeType.isBlank()) {
+            mimeType = "application/octet-stream";
+        }
+        try {
+            return geminiService.describeImage(file.getBytes(), mimeType);
+        } catch (IOException e) {
+            throw new StorageException("Nem sikerült beolvasni a feltöltött fájlt.", e);
+        }
+    }    
 }

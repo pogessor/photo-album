@@ -2,8 +2,11 @@ package com.dancsopeter.photoalbum.service;
 
 import com.google.genai.Client;
 import com.google.genai.types.Content;
+import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.Part;
+import com.google.genai.types.ThinkingConfig;
+import com.google.genai.types.ThinkingLevel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,18 +24,26 @@ public class GeminiService {
     }
 
     public String describeImage(byte[] imageBytes, String mimeType) {
-        String prompt = """
-                Kérlek, írd le részletesen, mi látható ezen a képen.
-                Egy rövid, 1-3 mondatos leírást adj, magyar nyelven.
-                Csak a leírást add vissza, semmi mást.
-                """;
+    String prompt = """
+            Kérlek, írd le részletesen, mi látható ezen a képen.
+            Egy rövid, 1-3 mondatos leírást adj, magyar nyelven.
+            Csak a leírást add vissza, semmi mást.
+            """;
 
-        Content content = Content.fromParts(
-                Part.fromText(prompt),
-                Part.fromBytes(imageBytes, mimeType)
-        );
+    Content content = Content.fromParts(
+            Part.fromText(prompt),
+            Part.fromBytes(imageBytes, mimeType)
+    );
 
-        GenerateContentResponse response = client.models.generateContent(model, content, null);
-        return response.text();
-    }
+    ThinkingConfig thinkingConfig = ThinkingConfig.builder()
+            .thinkingLevel(ThinkingLevel.Known.LOW)
+            .build();
+
+    GenerateContentConfig config = GenerateContentConfig.builder()
+            .thinkingConfig(thinkingConfig)
+            .build();
+
+    GenerateContentResponse response = client.models.generateContent(model, content, config);
+    return response.text();
+}
 }

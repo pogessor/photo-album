@@ -1,24 +1,54 @@
 import { useEffect, useState } from 'react'
 import { photoApi } from './api/photoApi'
 import PhotoGallery from './components/PhotoGallery'
+import SearchBar from './components/SearchBar'
 
 function App() {
-  const [photos, setPhotos] = useState([])
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [state, setState] = useState({
+    photos: [],
+    loading: true,
+    error: null,
+  })
 
+  // Debouncing
   useEffect(() => {
-    photoApi
-      .getAll()
-      .then((data) => {
-        setPhotos(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }, [])
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  // Adatlekérés
+  useEffect(() => {
+    let cancelled = false
+
+    const fetchPhotos = async () => {
+      setState((prev) => ({ ...prev, loading: true, error: null }))
+
+      try {
+        const data = debouncedSearchTerm
+          ? await photoApi.search(debouncedSearchTerm)
+          : await photoApi.getAll()
+
+        if (!cancelled) {
+          setState({ photos: data, loading: false, error: null })
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setState({ photos: [], loading: false, error: err.message })
+        }
+      }
+    }
+
+    fetchPhotos()
+
+    return () => {
+      cancelled = true
+    }
+  }, [debouncedSearchTerm])
 
   return (
     <div className="app">
@@ -27,9 +57,15 @@ function App() {
       </header>
 
       <main className="app-main">
-        {loading && <p className="app-loading">Betöltés...</p>}
-        {error && <p className="app-error">Hiba: {error}</p>}
-        {!loading && !error && <PhotoGallery photos={photos} />}
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Keresés év vagy leírás alapján..."
+        />
+
+        {state.loading && <p className="app-loading">Betöltés...</p>}
+        {state.error && <p className="app-error">Hiba: {state.error}</p>}
+        {!state.loading && !state.error && <PhotoGallery photos={state.photos} />}
       </main>
     </div>
   )

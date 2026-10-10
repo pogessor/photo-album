@@ -1,29 +1,36 @@
 import { useEffect, useState } from 'react'
 import { photoApi } from './api/photoApi'
+import PhotoGallery from './components/PhotoGallery'
 
 function App() {
   const [photos, setPhotos] = useState([])
   const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     photoApi
       .getAll()
-      .then((data) => setPhotos(data))
-      .catch((err) => setError(err.message))
+      .then((data) => {
+        setPhotos(data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(err.message)
+        setLoading(false)
+      })
   }, [])
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Photo Album</h1>
-      {error && <p style={{ color: 'red' }}>Hiba: {error}</p>}
-      <p>Fotók száma: {photos.length}</p>
-      <ul>
-        {photos.map((photo) => (
-          <li key={photo.id}>
-            {photo.year} – {photo.description || '(nincs leírás)'}
-          </li>
-        ))}
-      </ul>
+    <div className="app">
+      <header className="app-header">
+        <h1>Photo Album</h1>
+      </header>
+
+      <main className="app-main">
+        {loading && <p className="app-loading">Betöltés...</p>}
+        {error && <p className="app-error">Hiba: {error}</p>}
+        {!loading && !error && <PhotoGallery photos={photos} />}
+      </main>
     </div>
   )
 }

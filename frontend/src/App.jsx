@@ -3,6 +3,7 @@ import PhotoGallery from './components/PhotoGallery'
 import SearchBar from './components/SearchBar'
 import PhotoUploadForm from './components/PhotoUploadForm'
 import DeleteConfirmModal from './components/DeleteConfirmModal'
+import PhotoDetailModal from './components/PhotoDetailModal'
 import { usePhotos } from './hooks/usePhotos'
 import { useDebounce } from './hooks/useDebounce'
 import { photoApi } from './api/photoApi'
@@ -12,6 +13,7 @@ function App() {
   const [showUploadForm, setShowUploadForm] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [selectedPhoto, setSelectedPhoto] = useState(null)
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const { photos, loading, error, refresh } = usePhotos(debouncedSearchTerm)
@@ -28,8 +30,6 @@ function App() {
       await photoApi.delete(deleteTarget.id)
       setDeleteTarget(null)
       refresh()
-      //} catch (err) {
-      //console.error('Törlés sikertelen:', err)
     } catch {
       setDeleteTarget(null)
     } finally {
@@ -55,7 +55,9 @@ function App() {
         />
         {loading && <p className="app-loading">Betöltés...</p>}
         {error && <p className="app-error">Hiba: {error}</p>}
-        {!loading && !error && <PhotoGallery photos={photos} onDelete={setDeleteTarget} />}
+        {!loading && !error && (
+          <PhotoGallery photos={photos} onDelete={setDeleteTarget} onSelect={setSelectedPhoto} />
+        )}
       </main>
 
       <DeleteConfirmModal
@@ -64,6 +66,8 @@ function App() {
         onCancel={() => setDeleteTarget(null)}
         deleting={deleting}
       />
+
+      <PhotoDetailModal photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
     </div>
   )
 }

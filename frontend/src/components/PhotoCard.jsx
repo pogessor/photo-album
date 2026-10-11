@@ -1,12 +1,21 @@
 import { photoApi } from '../api/photoApi'
 
-function PhotoCard({ photo, onDelete }) {
+function PhotoCard({ photo, onDelete, onSelect }) {
+  const handleCardClick = () => {
+    onSelect(photo)
+  }
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation()
+    onDelete(photo)
+  }
+
   return (
-    <div className="photo-card">
+    <div className="photo-card" onClick={handleCardClick}>
       <button
         type="button"
         className="photo-card-delete"
-        onClick={() => onDelete(photo)}
+        onClick={handleDeleteClick}
         aria-label="Fotó törlése"
       >
         ×

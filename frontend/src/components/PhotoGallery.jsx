@@ -1,6 +1,6 @@
 import PhotoCard from './PhotoCard'
 
-function PhotoGallery({ photos, onDelete }) {
+function PhotoGallery({ photos, onDelete, onSelect }) {
   if (photos.length === 0) {
     return <p className="gallery-empty">Nincs megjeleníthető fotó.</p>
   }
@@ -8,7 +8,7 @@ function PhotoGallery({ photos, onDelete }) {
   return (
     <div className="photo-gallery">
       {photos.map((photo) => (
-        <PhotoCard key={photo.id} photo={photo} onDelete={onDelete} />
+        <PhotoCard key={photo.id} photo={photo} onDelete={onDelete} onSelect={onSelect} />
       ))}
     </div>
   )

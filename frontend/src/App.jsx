@@ -1,66 +1,24 @@
-import { useEffect, useState } from 'react'
-import { photoApi } from './api/photoApi'
+import { useState } from 'react'
 import PhotoGallery from './components/PhotoGallery'
 import SearchBar from './components/SearchBar'
 import PhotoUploadForm from './components/PhotoUploadForm'
 import DeleteConfirmModal from './components/DeleteConfirmModal'
+import { usePhotos } from './hooks/usePhotos'
+import { useDebounce } from './hooks/useDebounce'
+import { photoApi } from './api/photoApi'
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [showUploadForm, setShowUploadForm] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
-  const [state, setState] = useState({
-    photos: [],
-    loading: true,
-    error: null,
-  })
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchTerm])
-
-  useEffect(() => {
-    let cancelled = false
-
-    const fetchPhotos = async () => {
-      setState((prev) => ({ ...prev, loading: true, error: null }))
-      try {
-        const data = debouncedSearchTerm
-          ? await photoApi.search(debouncedSearchTerm)
-          : await photoApi.getAll()
-        if (!cancelled) {
-          setState({ photos: data, loading: false, error: null })
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setState({ photos: [], loading: false, error: err.message })
-        }
-      }
-    }
-
-    fetchPhotos()
-    return () => {
-      cancelled = true
-    }
-  }, [debouncedSearchTerm, refreshKey])
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const { photos, loading, error, refresh } = usePhotos(debouncedSearchTerm)
 
   const handleUploadSuccess = () => {
     setShowUploadForm(false)
-    setRefreshKey((k) => k + 1)
-  }
-
-  const handleDeleteRequest = (photo) => {
-    setDeleteTarget(photo)
-  }
-
-  const handleDeleteCancel = () => {
-    setDeleteTarget(null)
+    refresh()
   }
 
   const handleDeleteConfirm = async () => {
@@ -69,9 +27,10 @@ function App() {
     try {
       await photoApi.delete(deleteTarget.id)
       setDeleteTarget(null)
-      setRefreshKey((k) => k + 1)
-    } catch (err) {
-      setState((prev) => ({ ...prev, error: 'Törlés sikertelen: ' + err.message }))
+      refresh()
+      //} catch (err) {
+      //console.error('Törlés sikertelen:', err)
+    } catch {
       setDeleteTarget(null)
     } finally {
       setDeleting(false)
@@ -89,24 +48,20 @@ function App() {
 
       <main className="app-main">
         {showUploadForm && <PhotoUploadForm onUploadSuccess={handleUploadSuccess} />}
-
         <SearchBar
           value={searchTerm}
           onChange={setSearchTerm}
           placeholder="Keresés év vagy leírás alapján..."
         />
-
-        {state.loading && <p className="app-loading">Betöltés...</p>}
-        {state.error && <p className="app-error">Hiba: {state.error}</p>}
-        {!state.loading && !state.error && (
-          <PhotoGallery photos={state.photos} onDelete={handleDeleteRequest} />
-        )}
+        {loading && <p className="app-loading">Betöltés...</p>}
+        {error && <p className="app-error">Hiba: {error}</p>}
+        {!loading && !error && <PhotoGallery photos={photos} onDelete={setDeleteTarget} />}
       </main>
 
       <DeleteConfirmModal
         photo={deleteTarget}
         onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
+        onCancel={() => setDeleteTarget(null)}
         deleting={deleting}
       />
     </div>

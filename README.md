@@ -1,7 +1,7 @@
 # Photo Album with AI-powered Descriptions
 
 A full-stack photo album application with AI-generated image descriptions using Google Gemini.
-Built as a personal portfolio project to demonstrate modern Java backend and full-stack development.
+Built as a personal portfolio project to demonstrate modern Java backend, React frontend and full-stack architecture.
 
 ## Table of Contents
 
@@ -17,6 +17,7 @@ Built as a personal portfolio project to demonstrate modern Java backend and ful
 
 ## Features
 
+### Backend
 - 📸 **Photo upload** with metadata (year, description)
 - 🤖 **AI-generated descriptions** via Google Gemini (multimodal image understanding)
 - 🔍 **Unified search** across year and description in a single query
@@ -27,6 +28,20 @@ Built as a personal portfolio project to demonstrate modern Java backend and ful
 - ✅ **Bean Validation** on all inputs
 - 📖 **Interactive API docs** via Swagger UI
 
+### Frontend
+- 🖼️ **Responsive photo gallery** with CSS Grid
+- 🔍 **Debounced search bar** (300ms) for year and description
+- 📤 **Upload form** with image preview and AI description button
+- 🎨 **Photo detail modal** with keyboard navigation (arrow keys, ESC)
+- ✏️ **Edit modal** for updating photo metadata
+- 🗑️ **Delete confirmation modal** with backdrop overlay
+- 💅 **Modern UI** with hover animations and responsive design
+
+### DevOps
+- 🐳 **Full Docker Compose setup** – database, backend and frontend in containers
+- 🔄 **Nginx reverse proxy** for frontend, serving API requests to backend
+- 🔐 **Environment-based secrets** via `.env` file
+
 ## Tech Stack
 
 ### Backend
@@ -36,44 +51,57 @@ Built as a personal portfolio project to demonstrate modern Java backend and ful
 - **Spring Web MVC** – REST API
 - **Jakarta Bean Validation** – input validation
 - **Maven** – build tool
+- **springdoc-openapi** – Swagger UI
+
+### Frontend
+- **React 19** – UI library
+- **Vite 8** – build tool and dev server
+- **axios** – HTTP client
+- **ESLint + Prettier** – code quality
+- **Vanilla CSS** – styling (no CSS framework)
 
 ### Database
 - **PostgreSQL 16** – relational database
 
 ### AI
-- **Google Gemini 3.8 Flash** via the official `google-genai` SDK
-- `ThinkingLevel.LOW` for fast responses (~10s)
+- **Google Gemini 3.5 Flash Lite** via the official `google-genai` SDK
+- `ThinkingLevel.LOW` for fast responses (~5-15s)
 
 ### Storage
 - Local filesystem (with abstraction layer for future S3 migration)
 
 ### DevOps
 - **Docker** + **Docker Compose** – containerization
+- **Nginx** – static file serving + reverse proxy
 - **Git** + **GitHub** – version control
-
-### Documentation
-- **springdoc-openapi** – Swagger UI
-- **Markdown** – README and project docs
 
 ## Architecture
 
-The application follows a classic **three-layer architecture**:
+The application follows a classic **three-layer architecture** with a separate frontend:
 
 ```
-HTTP Request
-     ↓
 ┌─────────────────┐
-│   Controller    │  ← REST endpoints, HTTP handling, validation
-└─────────────────┘
-     ↓
+│   Browser       │
+└────────┬────────┘
+         │
+         │ HTTP (port 3000)
+         ▼
 ┌─────────────────┐
-│    Service      │  ← Business logic, transactions, orchestration
-└─────────────────┘
-     ↓
+│   Nginx         │  ← serves React static files
+│   (frontend)    │  ← proxies /api/* to backend
+└────────┬────────┘
+         │
+         │ HTTP (port 8080)
+         ▼
 ┌─────────────────┐
-│   Repository    │  ← Data access (Spring Data JPA)
-└─────────────────┘
-     ↓
+│   Spring Boot   │
+│   ├─ Controller │  ← REST endpoints, HTTP handling, validation
+│   ├─ Service    │  ← Business logic, transactions, orchestration
+│   └─ Repository │  ← Data access (Spring Data JPA)
+└────────┬────────┘
+         │
+         │ JDBC (port 5432)
+         ▼
 ┌─────────────────┐
 │   PostgreSQL    │  ← Persistence
 └─────────────────┘
@@ -90,6 +118,9 @@ Side channels:
 - **PhotoStorageService** abstraction with pluggable implementations (local → S3).
 - **Dependency Injection** via constructor (no field injection).
 - **Global exception handling** via `@RestControllerAdvice`.
+- **Custom React hooks** (`usePhotos`, `useDebounce`) for logic separation.
+- **Relative API URLs** in frontend – Vite proxy (dev) and nginx proxy (prod) handle the rest.
+- **No CORS in production** – frontend and backend on same origin via nginx.
 
 ## Project Structure
 
@@ -98,7 +129,7 @@ photo-album/
 ├── backend/                          # Spring Boot application
 │   ├── src/main/java/com/dancsopeter/photoalbum/
 │   │   ├── PhotoAlbumBackendApplication.java    # Entry point + demo runner
-│   │   ├── config/                              # Configuration classes
+│   │   ├── config/                              # Configuration (CORS, OpenAPI)
 │   │   ├── controller/                          # REST controllers
 │   │   ├── dto/                                 # Request/response DTOs
 │   │   ├── entity/                              # JPA entities
@@ -111,11 +142,36 @@ photo-album/
 │   │   └── test.jpeg                            # Test image for Gemini
 │   ├── Dockerfile                               # Multi-stage build
 │   └── pom.xml                                  # Maven dependencies
-├── frontend/                                    # React app (planned)
-├── docker-compose.yml                           # Full-stack orchestration
-├── .env                                         # Secrets (NOT in git)
-├── .env.example                                 # Secret template (in git)
+│
+├── frontend/                         # React application
+│   ├── src/
+│   │   ├── api/                                 # API client (axios)
+│   │   │   ├── axiosClient.js
+│   │   │   └── photoApi.js
+│   │   ├── components/                          # Reusable components
+│   │   │   ├── PhotoCard.jsx
+│   │   │   ├── PhotoGallery.jsx
+│   │   │   ├── PhotoDetailModal.jsx
+│   │   │   ├── PhotoEditModal.jsx
+│   │   │   ├── PhotoUploadForm.jsx
+│   │   │   ├── DeleteConfirmModal.jsx
+│   │   │   └── SearchBar.jsx
+│   │   ├── hooks/                               # Custom React hooks
+│   │   │   ├── usePhotos.js
+│   │   │   └── useDebounce.js
+│   │   ├── App.jsx                              # Root component
+│   │   ├── main.jsx                             # Entry point
+│   │   └── index.css                            # Global styles
+│   ├── nginx.conf                               # Nginx config for production
+│   ├── Dockerfile                               # Multi-stage build
+│   ├── package.json                             # npm dependencies
+│   └── vite.config.js                           # Vite configuration (proxy)
+│
+├── docker-compose.yml                # Full-stack orchestration
+├── .env                              # Secrets (NOT in git)
+├── .env.example                      # Secret template (in git)
 ├── .gitignore
+├── PARANCSOK.md                      # Command reference cheat sheet
 └── README.md
 ```
 
@@ -123,7 +179,7 @@ photo-album/
 
 | Package | Purpose |
 |---|---|
-| `config` | Spring configuration (OpenAPI, CORS, etc.) |
+| `config` | Spring configuration (OpenAPI, CORS) |
 | `controller` | HTTP endpoints, request/response handling |
 | `dto` | Immutable records for API contracts |
 | `entity` | JPA entities (database tables) |
@@ -135,12 +191,16 @@ photo-album/
 
 ### Prerequisites
 
-- **Java 21+** ([Eclipse Temurin](https://adoptium.net/))
 - **Docker Desktop** (with WSL2 on Windows)
-- **Git**
 - **Gemini API key** ([get one here](https://aistudio.google.com/apikey))
+- **Git**
 
-### Setup
+**Optionally, for local development:**
+- **Java 21+** ([Eclipse Temurin](https://adoptium.net/))
+- **Node.js 20+** and **npm**
+- **Maven**
+
+### Quick Start (Docker – Recommended)
 
 1. **Clone the repository:**
 
@@ -163,11 +223,14 @@ photo-album/
 
    The first build takes ~3-5 minutes. Subsequent starts are fast.
 
-4. **Access the API:**
-   - REST API: `http://localhost:8080/api/photos`
-   - Swagger UI: `http://localhost:8080/swagger-ui.html`
+4. **Access the application:**
+   - **Frontend:** `http://localhost:3000`
+   - **REST API:** `http://localhost:8080/api/photos`
+   - **Swagger UI:** `http://localhost:8080/swagger-ui.html`
 
-### Local Development (without Docker)
+### Local Development (Without Docker)
+
+**Backend:**
 
 1. Start only the database:
 
@@ -181,6 +244,16 @@ photo-album/
    cd backend
    ./mvnw spring-boot:run
    ```
+
+**Frontend:**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The Vite dev server runs on `http://localhost:5173` and proxies `/api/*` to `http://localhost:8080`.
 
 ## API Endpoints
 
@@ -235,7 +308,7 @@ Generate a description for an image using Gemini AI (stateless, does not save).
 
 **Response:** `200 OK` – `{ "description": "..." }`
 
-**Note:** takes ~10 seconds (Gemini `ThinkingLevel.LOW`).
+**Note:** takes ~5-15 seconds (Gemini `gemini-3.5-flash-lite`, `ThinkingLevel.LOW`).
 
 ### `PATCH /api/photos/{id}`
 
@@ -280,7 +353,7 @@ Delete a photo (both database record and file).
 |---|---|---|
 | `GEMINI_API_KEY` | Yes | Google Gemini API key |
 
-Loaded from `.env` via `spring-dotenv`. The `.env` file is **gitignored**.
+Loaded from `.env` via `spring-dotenv` (backend) and Docker Compose (containers). The `.env` file is **gitignored**.
 
 ### `application.properties` highlights
 
@@ -295,7 +368,7 @@ app.upload.dir=uploads
 
 # Gemini
 gemini.api.key=${GEMINI_API_KEY:}
-gemini.api.model=gemini-3.8-flash
+gemini.api.model=gemini-3.5-flash-lite
 
 # Optional Gemini test on startup
 app.gemini.test-on-startup=false
@@ -303,20 +376,32 @@ app.gemini.test-on-startup=false
 
 ## Roadmap
 
+### Done
 - [x] Spring Boot backend with CRUD REST API
 - [x] PostgreSQL integration
 - [x] File upload and serving
 - [x] Global exception handling
 - [x] Bean Validation
 - [x] Gemini AI integration for image descriptions
-- [x] Docker Compose deployment
 - [x] Swagger/OpenAPI documentation
-- [ ] **React frontend** (gallery, upload, search)
+- [x] React frontend with Vite
+- [x] Photo gallery with responsive grid
+- [x] Debounced search (year + description)
+- [x] Upload form with AI description button
+- [x] Photo detail modal with keyboard navigation
+- [x] Edit modal (PATCH)
+- [x] Delete confirmation modal
+- [x] Full Docker Compose setup (db + backend + frontend)
+- [x] Nginx reverse proxy
+
+### Planned
+- [ ] **Real-time updates** with Server-Sent Events (SSE) + PostgreSQL LISTEN/NOTIFY
 - [ ] **Flyway** for database migrations
 - [ ] **Unit and integration tests** (JUnit, Testcontainers)
 - [ ] **JWT authentication** (multi-user support)
 - [ ] **S3 storage** implementation
 - [ ] **CI/CD** with GitHub Actions
+- [ ] **Screenshots** in README
 
 ## License
 

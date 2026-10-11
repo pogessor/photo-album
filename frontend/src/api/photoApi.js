@@ -54,6 +54,6 @@ export const photoApi = {
   },
 
   getImageUrl: (id) => {
-    return `http://localhost:8080/api/photos/${id}/image`
+    return `/api/photos/${id}/image`
   },
 }

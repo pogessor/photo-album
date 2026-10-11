@@ -20,14 +20,15 @@ public class PhotoAlbumBackendApplication {
         SpringApplication.run(PhotoAlbumBackendApplication.class, args);
     }
 
-    @Bean
-    CommandLineRunner demo(
-            PhotoService photoService,
-            GeminiService geminiService,
-            @Value("${app.gemini.test-on-startup:false}") boolean geminiTestEnabled) {
-        return args -> {
-            photoService.deleteAll();
-            System.out.println(">>> Korábbi fotók törölve.");
+@Bean
+CommandLineRunner demo(
+        PhotoService photoService,
+        GeminiService geminiService,
+        @Value("${app.gemini.test-on-startup:false}") boolean geminiTestEnabled) {
+    return args -> {
+        // Csak akkor szúrunk be seed adatokat, ha a DB üres
+        if (photoService.findAll().isEmpty()) {
+            System.out.println(">>> Üres adatbázis, tesztfotók beszúrva.");
 
             Photo p1 = new Photo();
             p1.setYear(1999);
@@ -46,48 +47,27 @@ public class PhotoAlbumBackendApplication {
             p3.setDescription("Karácsony a nagymamánál");
             p3.setFilename("karacsony.jpg");
             photoService.save(p3);
+        } else {
+            System.out.println(">>> Adatbázisban már vannak fotók, seed kihagyva.");
+        }
 
-            System.out.println(">>> 3 tesztfotó beszúrva.");
-
-            System.out.println("\n>>> Keresés: 1999");
-            photoService.search("1999").forEach(p -> System.out.println(
-                    "  id=" + p.getId()
-                    + " | year=" + p.getYear()
-                    + " | desc=" + p.getDescription()
-            ));
-
-            System.out.println("\n>>> Keresés: alma");
-            photoService.search("alma").forEach(p -> System.out.println(
-                    "  id=" + p.getId()
-                    + " | year=" + p.getYear()
-                    + " | desc=" + p.getDescription()
-            ));
-
-            System.out.println("\n>>> Keresés: karácsony");
-            photoService.search("karácsony").forEach(p -> System.out.println(
-                    "  id=" + p.getId()
-                    + " | year=" + p.getYear()
-                    + " | desc=" + p.getDescription()
-            ));
-
-            if (geminiTestEnabled) {
-                System.out.println("\n>>> Gemini API teszt indul...");
-                Path testImagePath = Paths.get("uploads", "test.jpeg");
-                if (!Files.exists(testImagePath)) {
-                    System.out.println(">>> A teszt fájl nem található: "
-                            + testImagePath.toAbsolutePath());
-                } else {
-                    try {
-                        byte[] imageBytes = Files.readAllBytes(testImagePath);
-                        String description = geminiService.describeImage(imageBytes, "image/jpeg");
-                        System.out.println(">>> Gemini leírás: " + description);
-                    } catch (Exception e) {
-                        System.out.println(">>> Gemini hiba: " + e.getMessage());
-                    }
-                }
+        // Gemini teszt (csak ha engedélyezve van)
+        if (geminiTestEnabled) {
+            System.out.println("\n>>> Gemini API teszt indul...");
+            Path testImagePath = Paths.get("uploads", "test.jpeg");
+            if (!Files.exists(testImagePath)) {
+                System.out.println(">>> A teszt fájl nem található: "
+                        + testImagePath.toAbsolutePath());
             } else {
-                System.out.println("\n>>> Gemini teszt kihagyva (app.gemini.test-on-startup=false).");
+                try {
+                    byte[] imageBytes = Files.readAllBytes(testImagePath);
+                    String description = geminiService.describeImage(imageBytes, "image/jpeg");
+                    System.out.println(">>> Gemini leírás: " + description);
+                } catch (Exception e) {
+                    System.out.println(">>> Gemini hiba: " + e.getMessage());
+                }
             }
-        };
-    }
+        }
+    };
+}
 }

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { photoApi } from '../api/photoApi'
 
-function PhotoDetailModal({ photos, currentIndex, onNavigate, onClose }) {
+function PhotoDetailModal({ photos, currentIndex, onNavigate, onClose, onEdit }) {
   useEffect(() => {
     if (currentIndex === null) return
 
@@ -82,6 +82,16 @@ function PhotoDetailModal({ photos, currentIndex, onNavigate, onClose }) {
         </div>
 
         <div className="photo-detail-info">
+          <div className="photo-detail-header">
+            <h2 className="photo-detail-year">{photo.year}</h2>
+            <button
+              type="button"
+              className="photo-detail-edit-button"
+              onClick={() => onEdit(photo)}
+            >
+              ✎ Szerkesztés
+            </button>
+          </div>
           <h2 className="photo-detail-year">{photo.year}</h2>
           <p className="photo-detail-description">{photo.description || '(nincs leírás)'}</p>
           {photo.originalFilename && (

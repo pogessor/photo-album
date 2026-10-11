@@ -4,6 +4,7 @@ import SearchBar from './components/SearchBar'
 import PhotoUploadForm from './components/PhotoUploadForm'
 import DeleteConfirmModal from './components/DeleteConfirmModal'
 import PhotoDetailModal from './components/PhotoDetailModal'
+import PhotoEditModal from './components/PhotoEditModal'
 import { usePhotos } from './hooks/usePhotos'
 import { useDebounce } from './hooks/useDebounce'
 import { photoApi } from './api/photoApi'
@@ -17,6 +18,9 @@ function App() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const { photos, loading, error, refresh } = usePhotos(debouncedSearchTerm)
+
+  const [editTarget, setEditTarget] = useState(null)
+  const [editing, setEditing] = useState(false)
 
   const handleUploadSuccess = () => {
     setShowUploadForm(false)
@@ -34,6 +38,20 @@ function App() {
       setDeleteTarget(null)
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const handleEditSave = async (year, description) => {
+    if (!editTarget) return
+    setEditing(true)
+    try {
+      await photoApi.update(editTarget.id, year, description)
+      setEditTarget(null)
+      refresh()
+    } catch {
+      setEditTarget(null)
+    } finally {
+      setEditing(false)
     }
   }
 
@@ -67,11 +85,21 @@ function App() {
         deleting={deleting}
       />
 
+      {editTarget && (
+        <PhotoEditModal
+          photo={editTarget}
+          onSave={handleEditSave}
+          onCancel={() => setEditTarget(null)}
+          saving={editing}
+        />
+      )}
+
       <PhotoDetailModal
         photos={photos}
         currentIndex={selectedIndex}
         onNavigate={setSelectedIndex}
         onClose={() => setSelectedIndex(null)}
+        onEdit={setEditTarget}
       />
     </div>
   )

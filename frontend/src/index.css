@@ -613,3 +613,79 @@ body {
 .photo-detail-nav-next {
   right: 1rem;
 }
+
+/* Elevated modal (on top of another modal) */
+.modal-backdrop--elevated {
+  z-index: 1100;
+}
+
+.edit-modal {
+  max-width: 500px;
+}
+
+.edit-modal .modal-actions {
+  margin-top: 1.25rem;
+}
+
+.modal-confirm--primary {
+  background-color: #3498db;
+}
+
+.modal-confirm--primary:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+/* Photo detail edit button */
+.photo-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.photo-detail-edit-button {
+  background-color: transparent;
+  color: #3498db;
+  border: 2px solid #3498db;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+  white-space: nowrap;
+}
+
+.photo-detail-edit-button:hover {
+  background-color: #3498db;
+  color: white;
+}
+
+/* Edit modal form inputs */
+.edit-modal input[type='number'],
+.edit-modal textarea {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #333;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: white;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.edit-modal input:focus,
+.edit-modal textarea:focus {
+  border-color: #3498db;
+}
+
+.edit-modal textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}

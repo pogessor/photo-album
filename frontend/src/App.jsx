@@ -3,19 +3,21 @@ import { photoApi } from './api/photoApi'
 import PhotoGallery from './components/PhotoGallery'
 import SearchBar from './components/SearchBar'
 import PhotoUploadForm from './components/PhotoUploadForm'
+import DeleteConfirmModal from './components/DeleteConfirmModal'
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [showUploadForm, setShowUploadForm] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [state, setState] = useState({
     photos: [],
     loading: true,
     error: null,
   })
 
-  // Debouncing
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm)
@@ -23,7 +25,6 @@ function App() {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Adatlekérés
   useEffect(() => {
     let cancelled = false
 
@@ -54,6 +55,29 @@ function App() {
     setRefreshKey((k) => k + 1)
   }
 
+  const handleDeleteRequest = (photo) => {
+    setDeleteTarget(photo)
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteTarget(null)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await photoApi.delete(deleteTarget.id)
+      setDeleteTarget(null)
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      setState((prev) => ({ ...prev, error: 'Törlés sikertelen: ' + err.message }))
+      setDeleteTarget(null)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -74,8 +98,17 @@ function App() {
 
         {state.loading && <p className="app-loading">Betöltés...</p>}
         {state.error && <p className="app-error">Hiba: {state.error}</p>}
-        {!state.loading && !state.error && <PhotoGallery photos={state.photos} />}
+        {!state.loading && !state.error && (
+          <PhotoGallery photos={state.photos} onDelete={handleDeleteRequest} />
+        )}
       </main>
+
+      <DeleteConfirmModal
+        photo={deleteTarget}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        deleting={deleting}
+      />
     </div>
   )
 }

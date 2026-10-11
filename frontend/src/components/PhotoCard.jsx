@@ -1,8 +1,16 @@
 import { photoApi } from '../api/photoApi'
 
-function PhotoCard({ photo }) {
+function PhotoCard({ photo, onDelete }) {
   return (
     <div className="photo-card">
+      <button
+        type="button"
+        className="photo-card-delete"
+        onClick={() => onDelete(photo)}
+        aria-label="Fotó törlése"
+      >
+        ×
+      </button>
       <img
         src={photoApi.getImageUrl(photo.id)}
         alt={photo.description || 'Fotó'}

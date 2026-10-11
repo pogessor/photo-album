@@ -7,8 +7,13 @@ function PhotoGallery({ photos, onDelete, onSelect }) {
 
   return (
     <div className="photo-gallery">
-      {photos.map((photo) => (
-        <PhotoCard key={photo.id} photo={photo} onDelete={onDelete} onSelect={onSelect} />
+      {photos.map((photo, index) => (
+        <PhotoCard
+          key={photo.id}
+          photo={photo}
+          onDelete={onDelete}
+          onSelect={() => onSelect(index)}
+        />
       ))}
     </div>
   )

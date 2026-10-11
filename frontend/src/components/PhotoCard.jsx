@@ -2,7 +2,7 @@ import { photoApi } from '../api/photoApi'
 
 function PhotoCard({ photo, onDelete, onSelect }) {
   const handleCardClick = () => {
-    onSelect(photo)
+    onSelect()
   }
 
   const handleDeleteClick = (e) => {

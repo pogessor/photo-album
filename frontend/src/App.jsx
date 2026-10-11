@@ -13,7 +13,7 @@ function App() {
   const [showUploadForm, setShowUploadForm] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
-  const [selectedPhoto, setSelectedPhoto] = useState(null)
+  const [selectedIndex, setSelectedIndex] = useState(null)
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const { photos, loading, error, refresh } = usePhotos(debouncedSearchTerm)
@@ -56,7 +56,7 @@ function App() {
         {loading && <p className="app-loading">Betöltés...</p>}
         {error && <p className="app-error">Hiba: {error}</p>}
         {!loading && !error && (
-          <PhotoGallery photos={photos} onDelete={setDeleteTarget} onSelect={setSelectedPhoto} />
+          <PhotoGallery photos={photos} onDelete={setDeleteTarget} onSelect={setSelectedIndex} />
         )}
       </main>
 
@@ -67,7 +67,12 @@ function App() {
         deleting={deleting}
       />
 
-      <PhotoDetailModal photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
+      <PhotoDetailModal
+        photos={photos}
+        currentIndex={selectedIndex}
+        onNavigate={setSelectedIndex}
+        onClose={() => setSelectedIndex(null)}
+      />
     </div>
   )
 }

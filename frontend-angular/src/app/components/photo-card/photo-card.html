@@ -1,0 +1,21 @@
+<div class="photo-card" (click)="onSelect()">
+  <button
+    type="button"
+    class="photo-card-delete"
+    (click)="onDelete($event)"
+    aria-label="Fotó törlése"
+  >
+    ×
+  </button>
+  <img
+    [src]="imageUrl"
+    [alt]="photo.description || 'Fotó'"
+    class="photo-card-image"
+  />
+  <div class="photo-card-body">
+    <h3 class="photo-card-year">{{ photo.year }}</h3>
+    <p class="photo-card-description">
+      {{ photo.description || '(nincs leírás)' }}
+    </p>
+  </div>
+</div>

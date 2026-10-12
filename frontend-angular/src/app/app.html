@@ -1,0 +1,16 @@
+<div class="app">
+  <header class="app-header">
+    <h1>Photo Album</h1>
+    <button class="app-header-button">+ Új fotó</button>
+  </header>
+
+  <main class="app-main">
+    @if (loading()) {
+    <p class="app-loading">Betöltés...</p>
+    } @if (error()) {
+    <p class="app-error">Hiba: {{ error() }}</p>
+    } @if (!loading() && !error()) {
+    <app-gallery [photos]="photos()" />
+    }
+  </main>
+</div>

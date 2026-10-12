@@ -1,0 +1,13 @@
+@if (photos.length === 0) {
+<p class="gallery-empty">Nincs megjeleníthető fotó.</p>
+} @else {
+<div class="photo-gallery">
+  @for (photo of photos; track photo.id) {
+  <app-photo-card
+    [photo]="photo"
+    (select)="onSelect($event)"
+    (delete)="onDelete($event)"
+  />
+  }
+</div>
+}
